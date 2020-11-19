@@ -1,7 +1,7 @@
 'use strict';
 const path = require('path');
 const fs = require('fs');
-const execa = require('execa');
+const childprocess = require('child_process');
 const {isElectron, fixPathForAsarUnpack} = require('electron-util/node');
 const macosVersion = require('macos-version');
 
@@ -24,8 +24,8 @@ exports.hasScreenCapturePermission = () => {
 		return true;
 	}
 
-	const {stdout} = execa.sync(binary);
-	const hasPermission = stdout === 'true';
+	const stdout = childprocess.execSync(binary).toString();
+	const hasPermission = stdout.indexOf('true') > -1;
 
 	if (!hasPermission && filePath) {
 		try {
@@ -57,7 +57,7 @@ exports.hasPromptedForPermission = () => {
 
 exports.resetPermissions = ({bundleId = ''} = {}) => {
 	try {
-		execa.sync('tccutil', ['reset', 'ScreenCapture', bundleId].filter(Boolean));
+		childprocess.execSync('tccutil', ['reset', 'ScreenCapture', bundleId].filter(Boolean));
 
 		if (filePath && fs.existsSync(filePath)) {
 			fs.unlinkSync(filePath);
